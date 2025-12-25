@@ -18,7 +18,7 @@
 - Дистиллированная версия Whisper для распознавания речи (в 6x быстрее оригинала, CPU).
 
 3. Embeddings Engine
-- Модель**: `sentence-transformers/all-MiniLM-L6-v2`
+- Модель: `sentence-transformers/all-MiniLM-L6-v2`
 - Преобразование текста в векторные представления для семантического поиска.
 
 4. PDF KNOWLEDGE
