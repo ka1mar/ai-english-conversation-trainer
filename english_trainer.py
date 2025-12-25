@@ -350,21 +350,6 @@ def text_to_speech_raw(text, tts_pipeline, voice='af_heart'):
         logger.error(f"Error in text-to-speech-raw: {str(e)}")
         return None
 
-def text_to_speech(text, tts_pipeline, voice='af_heart'):
-    """Convert text to speech using Kokoro TTS - returns file path"""
-    try:
-        full_audio = text_to_speech_raw(text, tts_pipeline, voice)
-        
-        if full_audio is not None:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
-                sf.write(tmp_file.name, full_audio, 24000)
-                return tmp_file.name
-        
-        return None
-    except Exception as e:
-        logger.error(f"Error in text-to-speech: {str(e)}")
-        return None
-
 def text_to_speech_raw_parallel(text, tts_pipeline, voice='af_heart', max_workers=3):
     """
     Convert text to speech with PARALLEL sentence processing - returns RAW numpy array.
@@ -446,7 +431,7 @@ def text_to_speech_parallel(text, tts_pipeline, voice='af_heart', max_workers=3)
         return None
     except Exception as e:
         logger.error(f"Error in parallel text-to-speech: {str(e)}")
-        return text_to_speech(text, tts_pipeline, voice)
+        return None
 
 def get_audio_html(audio_path, autoplay=True, show_controls=True):
     """Generate HTML for audio playback"""
@@ -474,53 +459,6 @@ def get_audio_html(audio_path, autoplay=True, show_controls=True):
     except Exception as e:
         logger.error(f"Error creating audio HTML: {str(e)}")
         return None
-
-def get_streaming_audio_html(audio_chunks_b64, autoplay=True):
-    """
-    Generate HTML for STREAMING audio playback.
-    Plays chunks in sequence - first chunk starts immediately,
-    others queue up and play after previous finishes.
-    
-    audio_chunks_b64: list of base64-encoded audio strings
-    """
-    if not audio_chunks_b64:
-        return None
-    
-    queue_id = f"audioQueue_{int(time.time() * 1000)}"
-    
-    chunks_js = ",".join([f'"{chunk}"' for chunk in audio_chunks_b64])
-    
-    html = f'''
-    <div id="{queue_id}_container">
-        <audio id="{queue_id}_player" style="display: none;"></audio>
-    </div>
-    <script>
-    (function() {{
-        const audioChunks = [{chunks_js}];
-        let currentIndex = 0;
-        const player = document.getElementById('{queue_id}_player');
-        
-        function playNext() {{
-            if (currentIndex < audioChunks.length) {{
-                player.src = 'data:audio/wav;base64,' + audioChunks[currentIndex];
-                player.play().catch(e => console.log('Autoplay blocked:', e));
-                currentIndex++;
-            }}
-        }}
-        
-        player.onended = playNext;
-        player.onerror = function() {{
-            console.log('Audio error, trying next chunk');
-            currentIndex++;
-            playNext();
-        }};
-        
-        // Start playing first chunk immediately
-        {"playNext();" if autoplay else "// Autoplay disabled"}
-    }})();
-    </script>
-    '''
-    return html
 
 def audio_to_base64(audio_data, sample_rate=24000):
     """Convert numpy audio array to base64 string"""
